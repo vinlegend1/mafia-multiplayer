@@ -8,8 +8,15 @@ const {
     getRoomUsers,
     users
 } = require('./utils/users')
-const formatMessage = require('./utils/messages')
+const {
+    newGame,
+    getCurrentGame,
+    leaveGame
+} = require('./utils/games')
+const formatMessage = require('./utils/messages');
+const Game = require('./game');
 const io = require('socket.io')(server, options);
+// const Game = require('./game');
 
 io.on('connection', socket => {
 
@@ -66,6 +73,51 @@ io.on('connection', socket => {
     
                 const currentUser = getCurrentUser(socket.id);
                 socket.emit('afterSelectionProcess', currentUser);
+
+                // check if everyone in room has a role...
+                // if true : create new instance of Game i.e. new Game(room, turn, usersInRoom);
+                /*
+                            while(!game.isGameOver()) {
+                                socket.on() // Listen to client side emits, client =(emit<userInputs>)=> check input and if valid game.kill(person) || game.revive(person)
+                                io.to().emit() // emit the updates that happened
+                            }
+
+                */
+
+                let isEveryoneAssigned = false;
+                isEveryoneAssigned = usersInRoom.every(user => user.role !== '');
+                if (isEveryoneAssigned) {
+                    const game = new Game(currentUser.room);
+
+                    while(!game.isGameOver()) {
+                        const cTurn = game.currentTurn;
+                        /* socket.on('duringNight', ({ thing, target }) => {
+                            // increments within the socket.on callback
+                            if (thing === "kill") {
+                                game.kill(target)
+                            } else if (thing === "save") {
+                                game.rescue(target)
+                            }
+                            if (game.currentTurn === cTurn + 1) {
+                                io.to(game.room).emit(game.returnUpdatedScene);
+
+                            }
+
+                            socket.on('something', ({ thing, target }) => {
+                            // increments within the socket.on callback
+                            if (thing === "kill") {
+                                game.kill(target)
+                            } else if (thing === "save") {
+                                game.rescue(target)
+                            }
+                            if (game.currentTurn === cTurn + 1) {
+                                io.to(game.room).emit(game.returnUpdatedScene);
+
+                            }
+                        }) */
+
+                    }
+                }
             }
         })
         /*
@@ -77,7 +129,7 @@ io.on('connection', socket => {
             emit to everyone the "story"
             class Game {
                 room
-                turn
+                currentTurn
                 mafia
                 doctor
                 villagers: [villager]
